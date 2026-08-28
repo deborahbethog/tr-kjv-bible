@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>TR + KJV New Testament Parallel</title>
+<style>
+  :root{
+    --green:#064b0b; --green2:#0b5d12; --cream:#fff8d7;
+    --yellow:#fff34f; --link:#a9c8ff; --pink:#ff66d8;
+    --card:#0b5510; --line:#76a57a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--green);color:#fff;font-family:Georgia,"Times New Roman",serif}
+  header{padding:14px 12px 10px;text-align:center;position:sticky;top:0;z-index:10;background:rgba(6,75,11,.98);border-bottom:1px solid #2f7b36}
+  h1{margin:4px 0;color:var(--yellow);font-size:clamp(25px,7vw,42px);line-height:1.05}
+  .subtitle{font-size:15px;color:#f4f0d0;margin-top:7px}
+  .controls{display:grid;grid-template-columns:1.3fr .7fr auto auto;gap:7px;max-width:1100px;margin:10px auto 0}
+  select,button,input{font:inherit;border-radius:7px;border:1px solid #8db890;padding:9px;background:#fff;color:#111}
+  button{cursor:pointer;font-weight:bold}
+  .nav{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:9px auto 0}
+  .nav button{background:#e9f3e9}
+  .status{max-width:1100px;margin:7px auto 0;font-size:12px;color:#d6ead7;min-height:16px}
+  main{max-width:1100px;margin:0 auto;padding:12px}
+  .booktitle{text-align:center;color:var(--yellow);font-size:27px;margin:8px 0 12px}
+  .searchrow{display:flex;gap:7px;margin-bottom:10px}
+  .searchrow input{flex:1}
+  .parallel{display:grid;grid-template-columns:1fr 1fr;gap:2px;align-items:start}
+  .colhead{background:var(--green2);color:var(--pink);font-weight:bold;text-align:center;padding:10px 5px;font-size:20px;position:sticky;top:105px;z-index:5}
+  .verse{display:grid;grid-template-columns:42px 1fr;min-height:44px;border-bottom:1px solid rgba(255,255,255,.16)}
+  .verse:hover{background:rgba(255,255,255,.04)}
+  .vnum{color:var(--yellow);font-weight:bold;padding:9px 5px 8px;text-align:right}
+  .vtext{padding:9px 7px 8px;line-height:1.45;font-size:18px}
+  .greek{font-family:"Noto Serif","Times New Roman",serif}
+  .empty{padding:30px;text-align:center;color:#d8e7d8}
+  .source{max-width:1100px;margin:18px auto 35px;padding:12px;border-top:1px solid #3d7b42;color:#d8ead8;font:13px/1.5 Arial,sans-serif}
+  .source a{color:var(--link)}
+  .error{background:#5d1717;padding:12px;border-radius:8px;margin:10px 0;font:14px Arial,sans-serif}
+  mark{background:#ffe66b;color:#111;padding:0 2px}
+  @media(max-width:650px){
+    .controls{grid-template-columns:1fr 1fr}
+    .controls button{grid-column:auto}
+    .colhead{top:154px;font-size:16px}
+    .verse{grid-template-columns:31px 1fr}
+    .vnum{font-size:13px}
+    .vtext{font-size:16px;padding-left:5px;padding-right:5px}
+    .parallel{gap:1px}
+    main{padding:7px}
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>ONLINE TEXTUS RECEPTUS<br>and KING JAMES BIBLE</h1>
+  <div class="subtitle">Greek Textus Receptus | English King James Version — New Testament</div>
+  <div class="controls">
+    <select id="book"></select>
+    <select id="chapter"></select>
+    <button id="prev">‹ Prev</button>
+    <button id="next">Next ›</button>
+  </div>
+  <div class="nav">
+    <button id="top">Top</button>
+    <button id="reload">Reload data</button>
+  </div>
+  <div id="status" class="status">Loading…</div>
+</header>
+
+<main id="content">
+  <div class="booktitle" id="title"></div>
+  <div class="searchrow">
+    <input id="search" placeholder="Search this chapter…">
+    <button id="clear">Clear</button>
+  </div>
+  <div class="parallel">
+    <section>
+      <div class="colhead">Greek Textus Receptus</div>
+      <div id="greek"></div>
+    </section>
+    <section>
+      <div class="colhead">English King James</div>
+      <div id="english"></div>
+    </section>
+  </div>
+</main>
+
+<div class="source">
+  <b>Text sources:</b> Greek TR data: Textus Receptus (Stephanus 1550), public domain, from the Midvash open Bible-data project.
+  KJV data: King James Version (1769 editorial basis), public domain, from the maintained KJV Bible JSON corpus.
+  This page is an independent reader and is not affiliated with Logos Apostolic.
+  <br><br>
+  Greek source:
+  <a href="https://github.com/midvash/bible-data" target="_blank" rel="noopener">Midvash bible-data</a>.
+  KJV source:
+  <a href="https://github.com/renniemaharaj/kjv-bible" target="_blank" rel="noopener">KJV Bible JSON</a>.
+</div>
+
+<script>
+const BOOKS = [
+ ["Matt","Matthew",28,"Matthew.json"],["Mark","Mark",16,"Mark.json"],["Luke","Luke",24,"Luke.json"],
+ ["John","John",21,"John.json"],["Acts","Acts",28,"Acts.json"],["Rom","Romans",16,"Romans.json"],
+ ["1Cor","1 Corinthians",16,"1 Corinthians.json"],["2Cor","2 Corinthians",13,"2 Corinthians.json"],
+ ["Gal","Galatians",6,"Galatians.json"],["Eph","Ephesians",6,"Ephesians.json"],
+ ["Phil","Philippians",4,"Philippians.json"],["Col","Colossians",4,"Colossians.json"],
+ ["1Thess","1 Thessalonians",5,"1 Thessalonians.json"],["2Thess","2 Thessalonians",3,"2 Thessalonians.json"],
+ ["1Tim","1 Timothy",6,"1 Timothy.json"],["2Tim","2 Timothy",4,"2 Timothy.json"],
+ ["Titus","Titus",3,"Titus.json"],["Phlm","Philemon",1,"Philemon.json"],
+ ["Heb","Hebrews",13,"Hebrews.json"],["Jas","James",5,"James.json"],
+ ["1Pet","1 Peter",5,"1 Peter.json"],["2Pet","2 Peter",3,"2 Peter.json"],
+ ["1John","1 John",5,"1 John.json"],["2John","2 John",1,"2 John.json"],
+ ["3John","3 John",1,"3 John.json"],["Jude","Jude",1,"Jude.json"],
+ ["Rev","Revelation",22,"Revelation.json"]
+];
+
+const TR_URL = "https://raw.githubusercontent.com/midvash/bible-data/main/versions/gr/tr/tr.json";
+const KJV_BASE = "https://raw.githubusercontent.com/renniemaharaj/kjv-bible/main/";
+let trData = null, kjvCache = {};
+let currentBook = localStorage.getItem("trkjv_book") || "Rom";
+let currentChapter = +(localStorage.getItem("trkjv_chapter") || 1);
+
+const $ = id => document.getElementById(id);
+const bookSel=$("book"), chapSel=$("chapter"), status=$("status");
+
+function setStatus(s){status.textContent=s}
+function populateBooks(){
+  bookSel.innerHTML="";
+  BOOKS.forEach(([id,name])=>{
+    const o=document.createElement("option"); o.value=id;o.textContent=name;bookSel.appendChild(o);
+  });
+  if(!BOOKS.some(x=>x[0]===currentBook)) currentBook="Rom";
+  bookSel.value=currentBook; populateChapters();
+}
+function populateChapters(){
+  const b=BOOKS.find(x=>x[0]===bookSel.value);
+  chapSel.innerHTML="";
+  for(let i=1;i<=b[2];i++){const o=document.createElement("option");o.value=i;o.textContent="Chapter "+i;chapSel.appendChild(o)}
+  currentChapter=Math.min(Math.max(1,currentChapter),b[2]);chapSel.value=currentChapter;
+}
+function getBook(){return BOOKS.find(x=>x[0]===currentBook)}
+
+async function loadTR(){
+  if(trData) return trData;
+  const cached=localStorage.getItem("tr1550_data");
+  if(cached){try{trData=JSON.parse(cached);return trData}catch(e){}}
+  setStatus("Loading Greek Textus Receptus…");
+  const r=await fetch(TR_URL,{cache:"force-cache"}); if(!r.ok) throw new Error("Greek data could not be loaded.");
+  trData=await r.json();
+  try{localStorage.setItem("tr1550_data",JSON.stringify(trData))}catch(e){}
+  return trData;
+}
+async function loadKJV(file){
+  if(kjvCache[file]) return kjvCache[file];
+  const key="kjv_"+file;
+  const cached=localStorage.getItem(key);
+  if(cached){try{kjvCache[file]=JSON.parse(cached);return kjvCache[file]}catch(e){}}
+  setStatus("Loading English KJV…");
+  const r=await fetch(KJV_BASE+encodeURIComponent(file),{cache:"force-cache"});
+  if(!r.ok) throw new Error("KJV data could not be loaded.");
+  kjvCache[file]=await r.json();
+  try{localStorage.setItem(key,JSON.stringify(kjvCache[file]))}catch(e){}
+  return kjvCache[file];
+}
+
+function findTRBook(){
+  return trData.books.find(b=>b.book===currentBook || b.englishName===getBook()[1] || b.bookId===40+BOOKS.findIndex(x=>x[0]===currentBook));
+}
+function normalizeKJV(k){
+  // Repository format: object whose keys are chapter numbers, each containing verse keys.
+  if(Array.isArray(k)) return k;
+  if(k && Array.isArray(k.chapters)) return k.chapters;
+  if(k && k.chapters && typeof k.chapters==="object") return Object.entries(k.chapters).map(([c,v])=>({chapter:+c,verses:v}));
+  return Object.entries(k||{}).map(([c,v])=>({chapter:+c,verses:v}));
+}
+function kjvVersesFor(chapters,ch){
+  let c=chapters.find(x=>+x.chapter===ch);
+  if(!c) return [];
+  const v=c.verses;
+  if(Array.isArray(v)) return v.map(x=>({number:+(x.number??x.verse),text:x.text??x.value??""}));
+  return Object.entries(v||{}).map(([n,t])=>({number:+n,text:typeof t==="string"?t:(t.text??t.value??"")}));
+}
+function trVersesFor(ch){
+  const b=findTRBook();
+  if(!b) return [];
+  const c=b.chapters.find(x=>+x.chapter===ch);
+  return c ? c.verses.map(x=>({number:+x.number,text:x.text||""})) : [];
+}
+function esc(s){return s.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+function renderCol(el, verses, q, greek){
+  if(!verses.length){el.innerHTML='<div class="empty">No verses found.</div>';return}
+  el.innerHTML=verses.map(v=>{
+    let text=esc(String(v.text));
+    if(q){
+      const re=new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"),"gi");
+      text=text.replace(re,m=>"<mark>"+m+"</mark>");
+    }
+    return `<div class="verse"><div class="vnum">${v.number}</div><div class="vtext ${greek?"greek":""}">${text}</div></div>`;
+  }).join("");
+}
+async function render(){
+  currentBook=bookSel.value; currentChapter=+chapSel.value;
+  localStorage.setItem("trkjv_book",currentBook);localStorage.setItem("trkjv_chapter",currentChapter);
+  const meta=getBook();$("title").textContent=meta[1]+" Chapter "+currentChapter;
+  $("greek").innerHTML='<div class="empty">Loading…</div>';$("english").innerHTML='<div class="empty">Loading…</div>';
+  try{
+    await loadTR();
+    const kjv=await loadKJV(meta[3]);
+    const kv=kjvVersesFor(normalizeKJV(kjv),currentChapter);
+    const tv=trVersesFor(currentChapter);
+    const q=$("search").value.trim();
+    renderCol($("greek"),tv,q,true); renderCol($("english"),kv,q,false);
+    setStatus(`${meta[1]} ${currentChapter} • ${Math.max(tv.length,kv.length)} verses`);
+  }catch(e){
+    $("greek").innerHTML="";$("english").innerHTML=`<div class="error">${esc(e.message)}<br><br>Check your internet connection and tap “Reload data”.</div>`;
+    setStatus("Unable to load data.");
+  }
+}
+bookSel.addEventListener("change",()=>{currentBook=bookSel.value;currentChapter=1;populateChapters();render()});
+chapSel.addEventListener("change",()=>{currentChapter=+chapSel.value;render()});
+$("prev").onclick=()=>{if(currentChapter>1){currentChapter--;chapSel.value=currentChapter;render()}else{const i=BOOKS.findIndex(x=>x[0]===currentBook);if(i>0){currentBook=BOOKS[i-1][0];bookSel.value=currentBook;currentChapter=BOOKS[i-1][2];populateChapters();chapSel.value=currentChapter;render()}}};
+$("next").onclick=()=>{const meta=getBook();if(currentChapter<meta[2]){currentChapter++;chapSel.value=currentChapter;render()}else{const i=BOOKS.findIndex(x=>x[0]===currentBook);if(i<BOOKS.length-1){currentBook=BOOKS[i+1][0];bookSel.value=currentBook;currentChapter=1;populateChapters();render()}}};
+$("search").addEventListener("input",render);$("clear").onclick=()=>{$("search").value="";render()};
+$("top").onclick=()=>scrollTo({top:0,behavior:"smooth"});
+$("reload").onclick=()=>{localStorage.removeItem("tr1550_data");Object.keys(localStorage).filter(k=>k.startsWith("kjv_")).forEach(k=>localStorage.removeItem(k));trData=null;kjvCache={};render()};
+populateBooks();render();
+</script>
+</body>
+</html>
